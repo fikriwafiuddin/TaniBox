@@ -1,0 +1,143 @@
+import { z } from "zod"
+
+export const userRegistrationSchema = z
+  .object({
+    name: z
+      .string({
+        required_error: "Nama harus diisi",
+        invalid_type_error: "Nama harus berupa string",
+      })
+      .min(3, { message: "Nama minimal 3 karakter" })
+      .max(100, { message: "Nama maksimal 100 karakter" }),
+    email: z
+      .string({
+        required_error: "Email harus diisi",
+        invalid_type_error: "Email harus berupa string",
+      })
+      .email({ message: "Email tidak valid" })
+      .max(100, { message: "Email maksimal 100 karakter" }),
+    noHp: z
+      .string({
+        required_error: "Nomor HP harus diisi",
+        invalid_type_error: "Nomor HP harus berupa string",
+      })
+      .min(10, { message: "Nomor HP minimal 10 karakter" })
+      .max(15, { message: "Nomor HP maksimal 15 karakter" })
+      .regex(/^[0-9]+$/, { message: "Nomor HP hanya boleh berisi angka" }),
+    password: z
+      .string({
+        required_error: "Password harus diisi",
+        invalid_type_error: "Password harus berupa string",
+      })
+      .min(6, { message: "Password minimal 6 karakter" })
+      .max(50, { message: "Password maksimal 50 karakter" })
+      .refine((val) => /[A-Z]/.test(val), {
+        message: "Password harus mengandung minimal 1 huruf kapital",
+      })
+      .refine((val) => /[0-9]/.test(val), {
+        message: "Password harus mengandung minimal 1 angka",
+      }),
+    confirmPassword: z.string({
+      required_error: "Konfirmasi password harus diisi",
+      invalid_type_error: "Konfirmasi password harus berupa string",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Konfirmasi password tidak cocok",
+    path: ["confirmPassword"],
+  })
+
+export const userLoginSchema = z.object({
+  email: z
+    .string({
+      required_error: "Email harus diisi",
+      invalid_type_error: "Email harus berupa string",
+    })
+    .email({ message: "Email tidak valid" }),
+  password: z.string({
+    required_error: "Password harus diisi",
+    invalid_type_error: "Password harus berupa string",
+  }),
+})
+
+export const createProductSchema = z.object({
+  name: z
+    .string({
+      required_error: "Nama produk harus diisi",
+      invalid_type_error: "Nama produk harus berupa string",
+    })
+    .min(3, { message: "Nama produk minimal 3 karakter" })
+    .max(100, { message: "Nama produk maksimal 100 karakter" }),
+
+  price: z.preprocess(
+    (val) => Number(val),
+    z
+      .number({
+        required_error: "Harga produk harus diisi",
+        invalid_type_error: "Harga produk harus berupa angka",
+      })
+      .positive({ message: "Harga produk harus lebih dari 0" })
+      .max(1000000000, { message: "Harga produk terlalu besar" })
+  ),
+
+  stock: z.preprocess(
+    (val) => Number(val),
+    z
+      .number({
+        required_error: "Stok produk harus diisi",
+        invalid_type_error: "Stok produk harus berupa angka",
+      })
+      .int({ message: "Stok harus bilangan bulat" })
+      .nonnegative({ message: "Stok tidak boleh negatif" })
+  ),
+
+  image: z.string({
+    required_error: "Gambar produk harus diisi",
+  }),
+})
+
+export const editProductSchema = z.object({
+  name: z
+    .string({
+      required_error: "Nama produk harus diisi",
+      invalid_type_error: "Nama produk harus berupa string",
+    })
+    .min(3, { message: "Nama produk minimal 3 karakter" })
+    .max(100, { message: "Nama produk maksimal 100 karakter" }),
+
+  price: z
+    .number({
+      required_error: "Harga produk harus diisi",
+      invalid_type_error: "Harga produk harus berupa angka",
+    })
+    .positive({ message: "Harga produk harus lebih dari 0" })
+    .max(1000000000, { message: "Harga produk terlalu besar" }),
+
+  stock: z
+    .number({
+      required_error: "Stok produk harus diisi",
+      invalid_type_error: "Stok produk harus berupa angka",
+    })
+    .int({ message: "Stok harus bilangan bulat" })
+    .nonnegative({ message: "Stok tidak boleh negatif" }),
+})
+
+export const addProductCartSchema = z.object({
+  quantity: z
+    .number({
+      required_error: "Jumlah produk harus diisi",
+      invalid_type_error: "Jumlah produk harus berupa angka",
+    })
+    .int({ message: "Jumlah harus bilangan bulat" })
+    .nonnegative({ message: "Jumlah tidak boleh negatif" }),
+})
+
+export const editProductCartSchema = z.object({
+  quantity: z
+    .number({
+      required_error: "Jumlah produk harus diisi",
+      invalid_type_error: "Jumlah produk harus berupa angka",
+    })
+    .int({ message: "Jumlah harus bilangan bulat" })
+    .nonnegative({ message: "Jumlah tidak boleh negatif" }),
+})

@@ -2,19 +2,21 @@ import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 
+const sections = [
+  "beranda",
+  "produk",
+  "tentang",
+  "pesan",
+  "testimoni",
+  "kontak",
+]
+
 function Navbar({ onCartClick, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
-  const { user } = useSelector((state) => state.user)
-
-  const sections = [
-    "beranda",
-    "produk",
-    "tentang",
-    "pesan",
-    "testimoni",
-    "kontak",
-  ]
+  const { cart } = useSelector((state) => state.cart)
+  const { user } = useSelector((state) => state.auth)
+  const isLoggedIn = !!user
 
   // Detect scroll position
   useEffect(() => {
@@ -80,7 +82,7 @@ function Navbar({ onCartClick, onLogout }) {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-            {!user ? (
+            {!isLoggedIn ? (
               <>
                 <Link
                   className="text-sm text-gray-700 hover:text-lime-600"
@@ -105,16 +107,16 @@ function Navbar({ onCartClick, onLogout }) {
                 </Link>
                 <button
                   onClick={onCartClick}
-                  className="relative text-gray-700 hover:text-lime-600"
+                  className="relative cursor-pointer text-gray-700 hover:text-lime-600"
                 >
                   🛒
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    3
+                    {cart.length}
                   </span>
                 </button>
                 <button
                   onClick={onLogout}
-                  className="text-sm text-gray-700 hover:text-red-600"
+                  className="text-sm cursor-pointer text-gray-700 hover:text-red-600"
                 >
                   Logout
                 </button>

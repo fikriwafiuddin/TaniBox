@@ -14,10 +14,10 @@ function TableUsers({ users }) {
         <tbody>
           {users.map((user) => (
             <tr key={user.id} className="border-t">
-              <td className="px-4 py-3">#{user.id}</td>
+              <td className="px-4 py-3">#{user._id}</td>
               <td className="px-4 py-3">{user.name}</td>
               <td className="px-4 py-3">{user.email}</td>
-              <td className="px-4 py-3">{user.phone}</td>
+              <td className="px-4 py-3">{user.noHp}</td>
               <td className="px-4 py-3">{user.role}</td>
             </tr>
           ))}

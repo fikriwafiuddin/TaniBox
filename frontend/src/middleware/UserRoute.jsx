@@ -3,7 +3,7 @@ import { useSelector } from "react-redux"
 import { Navigate, useLocation } from "react-router-dom"
 
 function UserRoute({ children }) {
-  const { user } = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.auth)
   const location = useLocation()
 
   if (location.pathname === "/" && user?.role === "admin") {

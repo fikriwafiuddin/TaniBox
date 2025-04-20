@@ -1,7 +1,10 @@
 import Product from "../models/productModel.js"
-import { createProductSchema, editProductSchema } from "../utils/schema.js"
 import { z } from "zod"
 import fs from "fs"
+import createProductSchema from "../schema/createProductSchema.js"
+import editProductSchema from "../schema/editProductSchema.js"
+import { getSocket } from "../utils/socket.js"
+import ActivityLog from "../models/activityLogModel.js"
 
 export const getProducstByUser = async (req, res) => {
   try {
@@ -46,27 +49,62 @@ export const getProducstByAdmin = async (req, res) => {
 export const createProduct = async (req, res) => {
   const data = req.body
   const image = req.file
+  const user = req.user
   try {
     const validatedData = createProductSchema.parse({
       ...data,
       image: image?.filename,
     })
-    const { name, price, stock } = validatedData
+    const { name, price, stock, weight } = validatedData
 
     const existingProduct = await Product.findOne({ name })
     if (existingProduct) {
       if (image) {
         fs.unlinkSync(`images/products/${image.filename}`)
       }
-      return res.status(400).json({ message: "Produk sudah ada", errors: [] })
+      return res.status(400).json({
+        message: "Masukkan data dengan benar",
+        errors: [{ name: ["nama sudah digunakan"] }],
+      })
     }
 
     const newProduct = await Product.create({
       name,
       price,
       stock,
+      weight,
       image: image.filename,
     })
+
+    const io = getSocket()
+    io.emit("stats", {
+      message: `Product ${newProduct.name} has created.`,
+      data: {
+        key: "totalProducts",
+        value: 1,
+      },
+    })
+
+    const activityLog = await ActivityLog.create({
+      user: user._id,
+      action: "create_product",
+      message: `${newProduct.name} ditambahkan oleh ${user.name}`,
+      metadata: newProduct,
+    })
+
+    io.emit("activity", {
+      message: `Product ${newProduct.name} has created.`,
+      data: activityLog,
+    })
+
+    io.emit("product", {
+      message: `Product ${newProduct.name} has created.`,
+      data: {
+        action: "create",
+        product: newProduct,
+      },
+    })
+
     return res.status(201).json({
       message: "Produk berhasil ditambahkan",
       data: { product: newProduct },
@@ -77,7 +115,9 @@ export const createProduct = async (req, res) => {
     }
     if (error instanceof z.ZodError) {
       const errors = error.flatten().fieldErrors
-      return res.status(400).json({ message: "Error validasi data", errors })
+      return res
+        .status(400)
+        .json({ message: "Masukkan data dengan benar", errors })
     }
     console.log("Error in createProduct function", new Date(), error)
     return res
@@ -91,6 +131,12 @@ export const editProduct = async (req, res) => {
   const data = req.body
   const image = req.file
   try {
+    if (!id) {
+      return res
+        .status(400)
+        .json({ message: "ID produk tidak ditemukan", errors: [] })
+    }
+
     const product = await Product.findById(id)
     if (!product) {
       return res
@@ -99,11 +145,14 @@ export const editProduct = async (req, res) => {
     }
 
     const validatedData = editProductSchema.parse(data)
-    const { name, price, stock } = validatedData
+    const { name, price, stock, weight } = validatedData
 
     const existingProduct = await Product.findOne({ name })
-    if (existingProduct) {
-      return res.status(400).json({ message: "Produk sudah ada", errors: [] })
+    if (existingProduct && product.name !== existingProduct.name) {
+      return res.status(400).json({
+        message: "Produk sudah ada",
+        errors: [{ name: ["nama sudah digunakan"] }],
+      })
     }
 
     const editedProduct = await Product.findByIdAndUpdate(
@@ -112,6 +161,7 @@ export const editProduct = async (req, res) => {
         name,
         price,
         stock,
+        weight,
         image: image ? image.filename : product.image,
       },
       { new: true }
@@ -120,6 +170,27 @@ export const editProduct = async (req, res) => {
     if (image) {
       fs.unlinkSync(`images/products/${product.image}`)
     }
+
+    const newActivityLog = await ActivityLog.create({
+      user: req.user._id,
+      action: "update_product",
+      message: `${editedProduct.name} diubah oleh ${req.user.name}`,
+      metadata: editedProduct,
+    })
+
+    const io = getSocket()
+    io.emit("activity", {
+      message: `Product ${editedProduct.name} has updated.`,
+      data: newActivityLog,
+    })
+
+    io.emit("product", {
+      message: `Product ${editedProduct.name} has updated.`,
+      data: {
+        action: "edit",
+        product: editedProduct,
+      },
+    })
 
     return res.status(200).json({
       message: "Produk berhasil diubah",
@@ -131,7 +202,9 @@ export const editProduct = async (req, res) => {
     }
     if (error instanceof z.ZodError) {
       const errors = error.flatten().fieldErrors
-      return res.status(400).json({ message: "Error validasi data", errors })
+      return res
+        .status(400)
+        .json({ message: "Masukkan data dengan benar", errors })
     }
     console.log("Error in editProduct function", new Date(), error)
     return res
@@ -155,6 +228,35 @@ export const deleteProduct = async (req, res) => {
     if (product.image) {
       fs.unlinkSync(`images/products/${product.image}`)
     }
+
+    const io = getSocket()
+    io.emit("stats", {
+      message: `Product ${deletedProduct.name} has deleted.`,
+      data: {
+        key: "totalProducts",
+        value: -1,
+      },
+    })
+
+    const newActivityLog = await ActivityLog.create({
+      user: req.user._id,
+      action: "delete_product",
+      message: `${deletedProduct.name} dihapus oleh ${req.user.name}`,
+      metadata: deletedProduct,
+    })
+
+    io.emit("activity", {
+      message: `Product ${deletedProduct.name} has deleted.`,
+      data: newActivityLog,
+    })
+
+    io.emit("product", {
+      message: `Product ${deletedProduct.name} has deleted.`,
+      data: {
+        action: "delete",
+        product: deletedProduct,
+      },
+    })
 
     return res.status(200).json({
       message: "Produk berhasil dihapus",

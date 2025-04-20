@@ -1,28 +1,35 @@
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
 import TableProducts from "./TableProducts"
-import Form from "./Form"
+import FormAdd from "./FormAdd"
+import FormEdit from "./FormEdit"
+import { useDispatch } from "react-redux"
+import { getProductsByAdmin } from "../../../store/thunk/productThunk"
 
 function Products() {
   const [showFormAdd, setShowFormAdd] = useState(false)
-  const [showFormEdit, setShowFormEdit] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const dispatch = useDispatch()
 
   useEffect(() => {
     document.title = "Kelola Produk - Admin"
   }, [])
 
+  useEffect(() => {
+    dispatch(getProductsByAdmin())
+  }, [dispatch])
+
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex sm:flex-col sm:items-start sm:gap-2 lg:flex-row lg:items-center lg:gap-0 justify-between mb-6">
         <h1 className="text-3xl font-bold text-lime-600">
           Kelola Produk {showFormAdd && "/ Tambah Produk"}
-          {showFormEdit && "/ Edit Produk"}
+          {selectedProduct && "/ Edit Produk"}
         </h1>
-        {showFormAdd || showFormEdit ? (
+        {showFormAdd || selectedProduct ? (
           <button
             onClick={() => {
               setShowFormAdd(false)
-              setShowFormEdit(false)
+              setSelectedProduct(null)
             }}
             className="text-sm text-lime-600 hover:underline"
           >
@@ -39,17 +46,17 @@ function Products() {
       </div>
 
       {/* Form Tambah Produk */}
-      {(showFormAdd || showFormEdit) && (
-        <Form
-          showFormEdit={showFormEdit}
-          showFormAdd={showFormAdd}
-          // setShowFormAdd={setShowFormAdd}
+      {showFormAdd && <FormAdd setShowFormAdd={setShowFormAdd} />}
+      {selectedProduct && (
+        <FormEdit
+          setSelectedProduct={setSelectedProduct}
+          initialData={selectedProduct}
         />
       )}
 
       {/* Tabel Produk */}
-      {!showFormAdd && !showFormEdit && (
-        <TableProducts showEdit={() => setShowFormEdit(true)} />
+      {!showFormAdd && !selectedProduct && (
+        <TableProducts setSeletedProduct={setSelectedProduct} />
       )}
     </>
   )

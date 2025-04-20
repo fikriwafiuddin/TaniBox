@@ -2,7 +2,7 @@ import { useSelector } from "react-redux"
 import { Navigate } from "react-router-dom"
 
 function GuestRoute({ children }) {
-  const { user } = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.auth)
 
   if (user?.role === "user") {
     return <Navigate to="/" />

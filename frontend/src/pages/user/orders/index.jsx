@@ -1,40 +1,25 @@
-import React from "react"
 import { useNavigate } from "react-router-dom"
 import Order from "./Order"
-
-const orders = [
-  {
-    id: 1,
-    nama: "Dewi Lestari",
-    waktu: "2025-04-07 10:23",
-    total: 23000,
-    alamat: {
-      kecamatan: "Jetis",
-      desa: "Mulyoarjo",
-      dusun: "Karanganyar",
-      rt: "02/05",
-      deskripsi: "Sebelah masjid Nurul Huda",
-    },
-    status: "Menunggu Konfirmasi",
-  },
-  {
-    id: 2,
-    nama: "Andi Pratama",
-    waktu: "2025-04-06 15:10",
-    total: 42000,
-    alamat: {
-      kecamatan: "Tegaltirto",
-      desa: "Srihardono",
-      dusun: "Ngadipiro",
-      rt: "01/03",
-      deskripsi: "Belakang SDN 2",
-    },
-    status: "Diproses",
-  },
-]
+import { useDispatch, useSelector } from "react-redux"
+import { useEffect } from "react"
+import { getMyOrders } from "../../../store/thunk/orderThunk"
 
 const Orders = () => {
+  const { orders, isLoadingGetMyOrders } = useSelector((state) => state.order)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  useEffect(() => {
+    dispatch(getMyOrders())
+  }, [dispatch])
+
+  if (isLoadingGetMyOrders) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-12 h-12 border-4 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
   return (
     <section className="max-w-4xl mx-auto py-12 px-4">
       <button
@@ -52,7 +37,7 @@ const Orders = () => {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => (
-            <Order order={order} />
+            <Order key={order._id} order={order} />
           ))}
         </div>
       )}

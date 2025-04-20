@@ -27,7 +27,7 @@ export const orderSchema = z.object({
     required_error: "Kecamatan harus diisi",
     invalid_type_error: "Kecamatan harus berupa string",
   }),
-  kelurahan: z.string({
+  desa: z.string({
     required_error: "Kelurahan harus diisi",
     invalid_type_error: "Kelurahan harus berupa string",
   }),

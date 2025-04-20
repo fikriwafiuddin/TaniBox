@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AboutSection from "./AboutSection"
 import ContactSection from "./ContactSection"
 import FooterSection from "./FooterSection"
@@ -9,22 +9,44 @@ import ProductSection from "./ProductSection"
 import TestimonialSection from "./TestimonialSection"
 import Cart from "./Cart"
 import ConfirmDialog from "../../../components/ConfirmDialog"
+import { useDispatch, useSelector } from "react-redux"
+import { getProductsByUser } from "../../../store/thunk/productThunk"
+import { logout } from "../../../store/thunk/authThunk"
+import { getCart } from "../../../store/thunk/cartThunk"
 
 function Home() {
+  const { user } = useSelector((state) => state.user)
   const [showCart, setShowCart] = useState(false)
-  const [showLogoutConfirm, setShoLogoutConfirm] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(getProductsByUser())
+  }, [dispatch])
+
+  useEffect(() => {
+    if (user) {
+      dispatch(getCart())
+    }
+  }, [dispatch, user])
+
+  const onConfirm = () => {
+    dispatch(logout())
+    setShowLogoutConfirm(false)
+  }
+
   return (
     <>
       {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={showLogoutConfirm}
-        onConfirm={() => setShoLogoutConfirm(false)}
-        onCancel={() => setShoLogoutConfirm(false)}
+        onConfirm={onConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
         message="Apakah Anda yakin ingin keluar?"
       />
       <Navbar
         onCartClick={() => setShowCart(true)}
-        onLogout={() => setShoLogoutConfirm(true)}
+        onLogout={() => setShowLogoutConfirm(true)}
       />
       <HeroSection />
       <ProductSection />

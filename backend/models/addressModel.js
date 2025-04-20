@@ -6,7 +6,7 @@ const addressSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    kelurahan: [
+    desa: [
       {
         name: {
           type: String,

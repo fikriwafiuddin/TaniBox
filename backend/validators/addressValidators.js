@@ -8,7 +8,7 @@ export const addressSchema = z.object({
         invalid_type_error: "Nama kecamatan harus berupa string",
       })
       .min(3, { message: "Nama kecamatan minimal 3 karakter" }),
-    kelurahan: z
+    desa: z
       .array(
         z.object({
           name: z

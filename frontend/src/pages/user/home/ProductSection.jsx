@@ -1,31 +1,36 @@
-function ProductSection() {
-  const products = [
-    {
-      id: 1,
-      name: "Bayam Segar",
-      price: 5000,
-      image: "/Creamy Chicken Carbonara Recipe.jpg",
-    },
-    {
-      id: 2,
-      name: "Wortel Organik",
-      price: 7000,
-      image: "/Creamy Chicken Carbonara Recipe.jpg",
-    },
-    {
-      id: 3,
-      name: "Tomat Merah",
-      price: 6000,
-      image: "/Creamy Chicken Carbonara Recipe.jpg",
-    },
-    {
-      id: 4,
-      name: "Kangkung Hidroponik",
-      price: 8000,
-      image: "/Creamy Chicken Carbonara Recipe.jpg",
-    },
-  ]
-  const isLoggedIn = true
+import { useDispatch, useSelector } from "react-redux"
+import { BASE_URL } from "../../../constant"
+import { addProductCart } from "../../../store/thunk/cartThunk"
+
+function ProductSection({ isLoggedIn }) {
+  const { products, isLoadingGetProducts } = useSelector(
+    (state) => state.product
+  )
+  const { user } = useSelector((state) => state.auth)
+  const dispatch = useDispatch()
+
+  const handleAddProductToCart = (id) => {
+    dispatch(addProductCart(id))
+  }
+
+  const renderSkeletons = (count = 8) => {
+    return Array.from({ length: count }).map((_, index) => (
+      <div
+        key={index}
+        className="bg-white shadow-md rounded-lg overflow-hidden animate-pulse"
+      >
+        <div className="w-full h-40 bg-gray-200" />
+        <div className="p-4 space-y-2">
+          <div className="h-4 bg-gray-300 rounded w-3/4" />
+          <div className="h-4 bg-gray-300 rounded w-1/2" />
+          {isLoggedIn && (
+            <div className="h-10 bg-gray-300 rounded w-full mt-3" />
+          )}
+        </div>
+      </div>
+    ))
+  }
+
   return (
     <section
       id="produk"
@@ -40,32 +45,41 @@ function ProductSection() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {product.name}
-              </h3>
-              <p className="text-lime-600 font-bold mt-1">
-                Rp {product.price.toLocaleString()}
-              </p>
+        {isLoadingGetProducts
+          ? renderSkeletons()
+          : products?.map((product) => (
+              <div
+                key={product._id}
+                className="bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg"
+              >
+                <img
+                  src={`${BASE_URL}/${product.image}`}
+                  alt={product.name}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {product.name}
+                  </h3>
+                  <p className="text-lime-600 font-bold mt-1">
+                    Rp {product.price.toLocaleString()}
+                    <span className="text-gray-600 text-sm">
+                      /{product.weight} gram
+                    </span>
+                  </p>
 
-              {isLoggedIn && (
-                <button className="mt-3 w-full bg-lime-500 text-white py-2 px-4 rounded hover:bg-lime-600 transition">
-                  Tambah ke Keranjang
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddProductToCart(product._id)}
+                      className="mt-3 w-full cursor-pointer bg-lime-500 text-white py-2 px-4 rounded hover:bg-lime-600 transition"
+                    >
+                      Tambah ke Keranjang
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
       </div>
     </section>
   )

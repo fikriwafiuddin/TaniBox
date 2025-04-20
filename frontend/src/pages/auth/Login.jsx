@@ -1,17 +1,31 @@
-import { useState } from "react"
 import { Link } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import userLoginSchema from "../../validations/userLoginSchema"
+import { login } from "../../store/thunk/authThunk"
+import { useDispatch, useSelector } from "react-redux"
 
 function Login() {
-  const [form, setForm] = useState({ email: "", password: "" })
+  const { isLoadingLogin } = useSelector((state) => state.user)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm({
+    resolver: zodResolver(userLoginSchema),
+    mode: "onSubmit",
+  })
+  const dispatch = useDispatch()
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // Kirim ke backend untuk login
-    console.log("Login:", form)
+  const onSubmit = (data) => {
+    dispatch(login(data))
+      .unwrap()
+      .catch((backendErrors) => {
+        for (const key in backendErrors?.errors) {
+          setError(key, { message: backendErrors.errors[key][0] })
+        }
+      })
   }
 
   return (
@@ -20,17 +34,19 @@ function Login() {
         <h2 className="text-2xl font-bold mb-6 text-center text-lime-600">
           Login
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block mb-1 text-sm text-gray-700">Email</label>
             <input
               type="email"
               name="email"
-              value={form.email}
-              onChange={handleChange}
+              {...register("email")}
               required
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-400"
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email.message}</p>
+            )}
           </div>
 
           <div>
@@ -38,18 +54,21 @@ function Login() {
             <input
               type="password"
               name="password"
-              value={form.password}
-              onChange={handleChange}
+              {...register("password")}
               required
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-400"
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm">{errors.password.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
+            disabled={isLoadingLogin}
             className="w-full bg-lime-500 text-white py-2 rounded hover:bg-lime-600 transition"
           >
-            Login
+            {isLoadingLogin ? "Loading..." : "Login"}
           </button>
         </form>
 

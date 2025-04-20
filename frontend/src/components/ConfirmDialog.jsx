@@ -1,4 +1,4 @@
-function ConfirmDialog({ isOpen, message, onConfirm, onCancel }) {
+function ConfirmDialog({ isOpen, isLoading, message, onConfirm, onCancel }) {
   if (!isOpen) return null
 
   return (
@@ -10,15 +10,17 @@ function ConfirmDialog({ isOpen, message, onConfirm, onCancel }) {
         <div className="flex justify-center gap-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white hover:bg-gray-400"
+            disabled={isLoading}
+            className="px-4 py-2 cursor-pointer rounded bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white hover:bg-gray-400"
           >
             Batal
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600"
+            disabled={isLoading}
+            className="px-4 py-2 cursor-pointer rounded bg-red-500 text-white hover:bg-red-600"
           >
-            Ya
+            {isLoading ? "Loading..." : "Ya"}
           </button>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { login } from "../../store/thunk/authThunk"
 import { useDispatch, useSelector } from "react-redux"
 
 function Login() {
-  const { isLoadingLogin } = useSelector((state) => state.user)
+  const { isLoadingLogin } = useSelector((state) => state.auth)
   const {
     register,
     handleSubmit,

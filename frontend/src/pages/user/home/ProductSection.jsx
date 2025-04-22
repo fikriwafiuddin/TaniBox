@@ -53,7 +53,7 @@ function ProductSection({ isLoggedIn }) {
                 className="bg-white shadow-md rounded-lg overflow-hidden transition hover:shadow-lg"
               >
                 <img
-                  src={`${BASE_URL}/${product.image}`}
+                  src={`${product.image}`}
                   alt={product.name}
                   className="w-full h-40 object-cover"
                 />

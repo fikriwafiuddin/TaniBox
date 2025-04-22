@@ -212,7 +212,12 @@ export const getOrders = async (req, res) => {
       message: "Mengambil pesanan berhasil",
       data: { orders: orders.reverse() },
     })
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error in getOrders function", new Date(), error)
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", errors: {} })
+  }
 }
 
 export const callBackPayment = async (req, res) => {

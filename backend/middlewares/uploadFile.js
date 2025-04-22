@@ -1,23 +1,16 @@
 import multer from "multer"
+import { CloudinaryStorage } from "multer-storage-cloudinary"
+import cloudinary from "../utils/claudinary.js"
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "images/products")
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
-    cb(null, uniqueSuffix + "-" + file.originalname)
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "TaniBox/products",
+    format: async () => "webp",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    transformation: [{ quality: "auto" }],
   },
 })
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"]
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true)
-  } else {
-    cb(new Error("Invalid file type. Only JPEG, JPG, and PNG are allowed."))
-  }
-}
-
-const uploadFile = multer({ storage, fileFilter }).single("image")
+const uploadFile = multer({ storage }).single("image")
 export default uploadFile

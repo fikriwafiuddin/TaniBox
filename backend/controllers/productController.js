@@ -5,6 +5,7 @@ import createProductSchema from "../schema/createProductSchema.js"
 import editProductSchema from "../schema/editProductSchema.js"
 import { getSocket } from "../utils/socket.js"
 import ActivityLog from "../models/activityLogModel.js"
+import cloudinary from "../utils/claudinary.js"
 
 export const getProducstByUser = async (req, res) => {
   try {
@@ -53,14 +54,16 @@ export const createProduct = async (req, res) => {
   try {
     const validatedData = createProductSchema.parse({
       ...data,
-      image: image?.filename,
+      image: image?.path.toString(),
     })
     const { name, price, stock, weight } = validatedData
 
-    const existingProduct = await Product.findOne({ name })
+    const existingProduct = await Product.findOne({
+      name: { $regex: `^${name}$`, $options: "i" },
+    })
     if (existingProduct) {
       if (image) {
-        fs.unlinkSync(`images/products/${image.filename}`)
+        await cloudinary.uploader.destroy(image.filename)
       }
       return res.status(400).json({
         message: "Masukkan data dengan benar",
@@ -73,7 +76,8 @@ export const createProduct = async (req, res) => {
       price,
       stock,
       weight,
-      image: image.filename,
+      image: image.path,
+      cloudinary_id: image.filename,
     })
 
     const io = getSocket()
@@ -111,7 +115,7 @@ export const createProduct = async (req, res) => {
     })
   } catch (error) {
     if (image) {
-      fs.unlinkSync(`images/products/${image.filename}`)
+      await cloudinary.uploader.destroy(image.filename)
     }
     if (error instanceof z.ZodError) {
       const errors = error.flatten().fieldErrors
@@ -130,6 +134,7 @@ export const editProduct = async (req, res) => {
   const id = req.params.id
   const data = req.body
   const image = req.file
+  console.log(image)
   try {
     if (!id) {
       return res

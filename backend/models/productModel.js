@@ -23,6 +23,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    cloudinary_id: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

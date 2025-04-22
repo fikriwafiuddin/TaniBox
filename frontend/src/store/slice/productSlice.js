@@ -24,7 +24,7 @@ const productSlice = createSlice({
       state.msgError = null
     },
     changeProducts: (state, action) => {
-      const { action: actionType, product } = action.payload
+      const { action: actionType, product } = action.payload.data
       switch (actionType) {
         case "create":
           state.products.push(product)

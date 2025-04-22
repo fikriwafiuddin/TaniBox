@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { userRegistrationSchema } from "../../validations/userRegisterSchema"
 
 function Register() {
-  const { isLoadingRegister } = useSelector((state) => state.user)
+  const { isLoadingRegister } = useSelector((state) => state.auth)
   const {
     register: registerHook,
     handleSubmit,

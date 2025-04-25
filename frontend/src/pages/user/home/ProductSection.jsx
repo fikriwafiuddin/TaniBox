@@ -1,16 +1,21 @@
 import { useDispatch, useSelector } from "react-redux"
-import { BASE_URL } from "../../../constant"
 import { addProductCart } from "../../../store/thunk/cartThunk"
+import { useState } from "react"
 
 function ProductSection({ isLoggedIn }) {
   const { products, isLoadingGetProducts } = useSelector(
     (state) => state.product
   )
   const { user } = useSelector((state) => state.auth)
+  const { isLoadingAddProductCart } = useSelector((state) => state.cart)
+  const [selectedProduct, setSelectedProduct] = useState(null)
   const dispatch = useDispatch()
 
   const handleAddProductToCart = (id) => {
-    dispatch(addProductCart(id))
+    setSelectedProduct(id)
+    dispatch(addProductCart(id)).then(() => {
+      setSelectedProduct(null)
+    })
   }
 
   const renderSkeletons = (count = 8) => {
@@ -74,7 +79,10 @@ function ProductSection({ isLoggedIn }) {
                       onClick={() => handleAddProductToCart(product._id)}
                       className="mt-3 w-full cursor-pointer bg-lime-500 text-white py-2 px-4 rounded hover:bg-lime-600 transition"
                     >
-                      Tambah ke Keranjang
+                      {isLoadingAddProductCart &&
+                      selectedProduct === product._id
+                        ? "Loading..."
+                        : "Tambah Ke Keranjang"}
                     </button>
                   )}
                 </div>

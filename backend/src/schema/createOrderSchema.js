@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const orderSchema = z.object({
+const createOrderSchema = z.object({
   name: z
     .string({
       required_error: "Nama harus diisi",
@@ -50,3 +50,5 @@ export const orderSchema = z.object({
     })
     .max(1000, { message: "Deskripsi maksimal 1000 karakter" }),
 })
+
+export default createOrderSchema

@@ -66,8 +66,8 @@ io.on("connection", (socket) => {
   })
 })
 
-cron.schedule("* * * * *", async () => {
-  console.log("🔍 Menjalankan pengecekan order expired...")
+cron.schedule("0 0 * * *", async () => {
+  console.log("🔍 Running expired order check...")
   await checkExpiredOrders()
 })
 

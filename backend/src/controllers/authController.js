@@ -1,5 +1,4 @@
 import User from "../models/userModel.js"
-import { userLoginSchema, userRegistrationSchema } from "../utils/schema.js"
 import { z } from "zod"
 import bcrypt from "bcrypt"
 import generateToken from "../utils/generateToken.js"
@@ -7,6 +6,8 @@ import Cart from "../models/cartModel.js"
 import { getSocket } from "../utils/socket.js"
 import { generateSocketToken } from "../memory/socketToken.js"
 import ActivityLog from "../models/activityLogModel.js"
+import userRegistrationSchema from "../schema/userRegisterSchema.js"
+import userLoginSchema from "../schema/userLoginSchema.js"
 
 export const register = async (req, res) => {
   const data = req.body // name, email, noHP, password, confirmPassword

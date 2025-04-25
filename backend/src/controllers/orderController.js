@@ -1,7 +1,6 @@
 import Address from "../models/addressModel.js"
 import Cart from "../models/cartModel.js"
 import Order from "../models/orderModel.js"
-import { orderSchema } from "../validators/orderValidators.js"
 import { z } from "zod"
 import midtransClient from "midtrans-client"
 import crypto from "crypto"
@@ -9,6 +8,7 @@ import { getSocket } from "../utils/socket.js"
 import ActivityLog from "../models/activityLogModel.js"
 import mongoose from "mongoose"
 import Product from "../models/productModel.js"
+import createOrderSchema from "../schema/createOrderSchema.js"
 
 export const createOrder = async (req, res) => {
   const user = req.user
@@ -27,36 +27,7 @@ export const createOrder = async (req, res) => {
         .json({ message: "Keranjang tidak ditemukan", errors: [] })
     }
 
-    let amount = 0
-    const orderItems = []
-    for (const item of cart.products) {
-      const product = item.product
-      const quantity = item.quantity
-
-      const available = product.stock - product.lockedStock
-      if (quantity > available) {
-        await session.abortTransaction()
-        return res.status(400).json({
-          message:
-            "Ada produk yang jumlahnya melebihi stok, tolong refresh halaman ini!",
-          errors: {},
-        })
-      }
-
-      product.lockedStock += quantity
-      await product.save({ session })
-
-      orderItems.push({
-        id: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: quantity,
-        price: product.price,
-      })
-      amount += product.price * quantity
-    }
-
-    const validatedData = orderSchema.parse(data)
+    const validatedData = createOrderSchema.parse(data)
     const { name, email, noHp, kecamatan, desa, dusun, rt, rw, description } =
       validatedData
 
@@ -88,6 +59,35 @@ export const createOrder = async (req, res) => {
         message: "Alamat bukan dalam jangkauan kami!",
         errors: [{ dusun: ["Dusun bukan dalam jangkauan kami!"] }],
       })
+    }
+
+    let amount = 0
+    const orderItems = []
+    for (const item of cart.products) {
+      const product = item.product
+      const quantity = item.quantity
+
+      const available = product.stock - product.lockedStock
+      if (quantity > available) {
+        await session.abortTransaction()
+        return res.status(400).json({
+          message:
+            "Ada produk yang jumlahnya melebihi stok, tolong refresh halaman ini!",
+          errors: {},
+        })
+      }
+
+      product.lockedStock += quantity
+      await product.save({ session })
+
+      orderItems.push({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        price: product.price,
+      })
+      amount += product.price * quantity
     }
 
     const order = new Order({

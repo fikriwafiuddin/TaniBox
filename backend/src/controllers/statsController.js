@@ -2,7 +2,6 @@ import User from "../models/userModel.js"
 import Order from "../models/orderModel.js"
 import Product from "../models/productModel.js"
 import dayjs from "dayjs"
-import ActivityLog from "../models/activityLogModel.js"
 
 export const getStats = async (req, res) => {
   try {

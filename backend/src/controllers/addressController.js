@@ -1,8 +1,6 @@
 import ActivityLog from "../models/activityLogModel.js"
 import Address from "../models/addressModel.js"
 import { getSocket } from "../utils/socket.js"
-import { addressSchema } from "../validators/addressValidators.js"
-import { z } from "zod"
 
 export const getAddress = async (req, res) => {
   try {
@@ -18,28 +16,6 @@ export const getAddress = async (req, res) => {
       .json({ message: "Mengambil alamat berhasil", data: { address } })
   } catch (error) {
     console.log("Error in getAddress function", new Date(), error)
-    return res
-      .status(500)
-      .json({ message: "Internal server error", errors: [] })
-  }
-}
-
-export const createAddress = async (req, res) => {
-  const data = req.body
-  try {
-    const validatedData = addressSchema.parse(data)
-
-    const newAddress = await Address.create(validatedData)
-    return res.status(201).json({
-      message: "Alamat berhasil ditambahkan",
-      data: newAddress,
-    })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errors = error.flatten().fieldErrors
-      return res.status(400).json({ message: "Error validasi data", errors })
-    }
-    console.log("Error in createAddress function", new Date(), error)
     return res
       .status(500)
       .json({ message: "Internal server error", errors: [] })

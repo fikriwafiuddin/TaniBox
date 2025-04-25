@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const userRegistrationSchema = z
+const userRegistrationSchema = z
   .object({
     name: z
       .string({
@@ -47,35 +47,4 @@ export const userRegistrationSchema = z
     path: ["confirmPassword"],
   })
 
-export const userLoginSchema = z.object({
-  email: z
-    .string({
-      required_error: "Email harus diisi",
-      invalid_type_error: "Email harus berupa string",
-    })
-    .email({ message: "Email tidak valid" }),
-  password: z.string({
-    required_error: "Password harus diisi",
-    invalid_type_error: "Password harus berupa string",
-  }),
-})
-
-export const addProductCartSchema = z.object({
-  quantity: z
-    .number({
-      required_error: "Jumlah produk harus diisi",
-      invalid_type_error: "Jumlah produk harus berupa angka",
-    })
-    .int({ message: "Jumlah harus bilangan bulat" })
-    .nonnegative({ message: "Jumlah tidak boleh negatif" }),
-})
-
-export const editProductCartSchema = z.object({
-  quantity: z
-    .number({
-      required_error: "Jumlah produk harus diisi",
-      invalid_type_error: "Jumlah produk harus berupa angka",
-    })
-    .int({ message: "Jumlah harus bilangan bulat" })
-    .nonnegative({ message: "Jumlah tidak boleh negatif" }),
-})
+export default userRegistrationSchema

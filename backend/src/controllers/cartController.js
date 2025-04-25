@@ -1,7 +1,7 @@
 import Cart from "../models/cartModel.js"
 import Product from "../models/productModel.js"
-import { addProductCartSchema } from "../utils/schema.js"
 import { z } from "zod"
+import addProductCartSchema from "../schema/addProductCartSchema.js"
 
 export const getCart = async (req, res) => {
   const user = req.user

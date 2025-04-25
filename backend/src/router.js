@@ -20,7 +20,6 @@ import {
   addDesa,
   addDusun,
   addKecamatan,
-  createAddress,
   deleteDesa,
   deleteDusun,
   deleteKecamatan,
@@ -120,7 +119,6 @@ router.delete(
   verifyAdmin,
   deleteProduct
 )
-router.post("/admin/createAddress", verifyToken, verifyAdmin, createAddress)
 router.get("/admin/orders", verifyToken, verifyAdmin, getOrders)
 router.put("/admin/sendOrder/:orderId", verifyToken, verifyAdmin, sendOrder)
 router.put("/admin/rejectOrder/:orderId", verifyToken, verifyAdmin, rejectOrder)

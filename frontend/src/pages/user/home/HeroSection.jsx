@@ -2,7 +2,7 @@ function HeroSection() {
   return (
     <section
       id="beranda"
-      className="relative max-w-5xl mx-auto md:mt-2 h-80 md:h-96 overflow-hidden bg-cover bg-center bg-[url(./hero.jpeg)]"
+      className="relative max-w-5xl mx-auto md:mt-2 h-80 md:h-96 overflow-hidden bg-cover bg-center bg-[url(https://res.cloudinary.com/dvsoqr5sn/image/upload/v1745428031/download_dlvsab.webp)]"
     >
       {/* Overlay Gelap untuk Kontras */}
       <div className="absolute inset-0 bg-opacity-40 z-0" />

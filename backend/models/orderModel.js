@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema(
     },
     orderItems: [
       {
+        id: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
         name: { type: String, required: true },
         price: { type: Number, required: true },
         quantity: { type: Number, required: true },
@@ -38,6 +39,10 @@ const orderSchema = new mongoose.Schema(
         "failed",
       ],
       default: "pending",
+    },
+    expiredAt: {
+      type: Date,
+      default: new Date(Date.now() + 10 * 60 * 1000),
     },
   },
   {

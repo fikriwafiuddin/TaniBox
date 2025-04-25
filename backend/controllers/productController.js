@@ -54,7 +54,7 @@ export const createProduct = async (req, res) => {
   try {
     const validatedData = createProductSchema.parse({
       ...data,
-      image: image?.path.toString(),
+      image: image?.secure_url,
     })
     const { name, price, stock, weight } = validatedData
 
@@ -63,7 +63,7 @@ export const createProduct = async (req, res) => {
     })
     if (existingProduct) {
       if (image) {
-        await cloudinary.uploader.destroy(image.filename)
+        await cloudinary.uploader.destroy(image.public_id)
       }
       return res.status(400).json({
         message: "Masukkan data dengan benar",
@@ -76,8 +76,8 @@ export const createProduct = async (req, res) => {
       price,
       stock,
       weight,
-      image: image.path,
-      cloudinary_id: image.filename,
+      image: image.secure_url,
+      cloudinary_id: image.public_id,
     })
 
     const io = getSocket()
@@ -173,7 +173,7 @@ export const editProduct = async (req, res) => {
     )
 
     if (image) {
-      fs.unlinkSync(`images/products/${product.image}`)
+      await cloudinary.uploader.destroy(product.cloudinary_id)
     }
 
     const newActivityLog = await ActivityLog.create({
@@ -203,7 +203,7 @@ export const editProduct = async (req, res) => {
     })
   } catch (error) {
     if (image) {
-      fs.unlinkSync(`images/products/${image.filename}`)
+      await cloudinary.uploader.destroy(image.public_id)
     }
     if (error instanceof z.ZodError) {
       const errors = error.flatten().fieldErrors
@@ -231,7 +231,7 @@ export const deleteProduct = async (req, res) => {
     const deletedProduct = await Product.findByIdAndDelete(id)
 
     if (product.image) {
-      fs.unlinkSync(`images/products/${product.image}`)
+      await cloudinary.uploader.destroy(product.cloudinary_id)
     }
 
     const io = getSocket()

@@ -15,6 +15,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    lockedStock: {
+      type: Number,
+      default: 0,
+    },
     weight: {
       type: Number,
       required: true,

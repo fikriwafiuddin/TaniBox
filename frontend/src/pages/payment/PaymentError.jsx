@@ -12,10 +12,10 @@ function PaymentError() {
           lagi.
         </p>
         <Link
-          to="/checkout"
+          to="/"
           className="inline-block bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700 transition"
         >
-          Kembali ke Checkout
+          Kembali ke Beranda
         </Link>
       </div>
     </div>

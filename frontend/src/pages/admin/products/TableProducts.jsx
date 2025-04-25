@@ -32,6 +32,7 @@ function TableProducts({ setSeletedProduct }) {
             <th className="py-3 px-4">Nama Produk</th>
             <th className="py-3 px-4">Harga</th>
             <th className="py-3 px-4">Stok</th>
+            <th className="py-3 px-4">Locked</th>
             <th className="py-3 px-4">Aksi</th>
           </tr>
         </thead>
@@ -45,6 +46,7 @@ function TableProducts({ setSeletedProduct }) {
               <td className="py-3 px-4">{product.name}</td>
               <td className="py-3 px-4">Rp{product.price.toLocaleString()}</td>
               <td className="py-3 px-4">{product.stock}</td>
+              <td className="py-3 px-4">{product.lockedStock}</td>
               <td className="py-3 px-4 space-x-2">
                 <button
                   onClick={() => setSeletedProduct(product)}

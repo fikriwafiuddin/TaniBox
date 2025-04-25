@@ -34,7 +34,7 @@ const userRoutes = {
       element: <PaymentSuccess />,
     },
     {
-      path: "/order/payment-error",
+      path: "/order/payment-failed",
       element: <PaymentError />,
     },
     {

@@ -7,6 +7,8 @@ import http from "http"
 import { Server } from "socket.io"
 import { initSocket } from "./utils/socket.js"
 import { deleteSocketToken, verifySocketToken } from "./memory/socketToken.js"
+import cron from "node-cron"
+import { checkExpiredOrders } from "./controllers/orderController.js"
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -62,6 +64,11 @@ io.on("connection", (socket) => {
   socket.on("error", (error) => {
     console.error(`Socket error: ${error}`)
   })
+})
+
+cron.schedule("* * * * *", async () => {
+  console.log("🔍 Menjalankan pengecekan order expired...")
+  await checkExpiredOrders()
 })
 
 server.listen(port, () => {

@@ -7,19 +7,53 @@ import midtransClient from "midtrans-client"
 import crypto from "crypto"
 import { getSocket } from "../utils/socket.js"
 import ActivityLog from "../models/activityLogModel.js"
+import mongoose from "mongoose"
+import Product from "../models/productModel.js"
 
 export const createOrder = async (req, res) => {
   const user = req.user
   const data = req.body
+  const session = await mongoose.startSession()
   try {
+    session.startTransaction()
+
     const cart = await Cart.findOne({ userId: user._id }).populate({
       path: "products.product",
-      select: "name price",
     })
     if (!cart || cart.products.length === 0) {
+      await session.abortTransaction()
       return res
         .status(404)
         .json({ message: "Keranjang tidak ditemukan", errors: [] })
+    }
+
+    let amount = 0
+    const orderItems = []
+    for (const item of cart.products) {
+      const product = item.product
+      const quantity = item.quantity
+
+      const available = product.stock - product.lockedStock
+      if (quantity > available) {
+        await session.abortTransaction()
+        return res.status(400).json({
+          message:
+            "Ada produk yang jumlahnya melebihi stok, tolong refresh halaman ini!",
+          errors: {},
+        })
+      }
+
+      product.lockedStock += quantity
+      await product.save({ session })
+
+      orderItems.push({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        price: product.price,
+      })
+      amount += product.price * quantity
     }
 
     const validatedData = orderSchema.parse(data)
@@ -30,6 +64,7 @@ export const createOrder = async (req, res) => {
       "kecamatan.name": kecamatan,
     })
     if (!address) {
+      await session.abortTransaction()
       return res.status(400).json({
         message: "Alamat bukan dalam jangkauan kami!",
         errors: [{ kecamatan: ["Kecamatan bukan dalam jangkauan kami!"] }],
@@ -37,9 +72,9 @@ export const createOrder = async (req, res) => {
     }
 
     const isExistKecamatan = address.kecamatan
-
     const isExistDesa = isExistKecamatan.desa.find((val) => val.name === desa)
     if (!isExistDesa) {
+      await session.abortTransaction()
       return res.status(400).json({
         message: "Alamat bukan dalam jangkauan kami!",
         errors: [{ desa: ["Kelurahan bukan dalam jangkauan kami!"] }],
@@ -48,24 +83,18 @@ export const createOrder = async (req, res) => {
 
     const isExistDusun = isExistDesa.dusun.find((val) => val === dusun)
     if (!isExistDusun) {
+      await session.abortTransaction()
       return res.status(400).json({
         message: "Alamat bukan dalam jangkauan kami!",
         errors: [{ dusun: ["Dusun bukan dalam jangkauan kami!"] }],
       })
     }
 
-    const amount = cart.products.reduce((total, item) => {
-      return total + item.quantity * item.product.price
-    }, 0)
     const order = new Order({
       user: user._id,
-      orderItems: cart.products.map((item) => ({
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        price: item.product.price,
-      })),
+      orderItems,
       amount,
+      status: "pending",
       address: {
         name,
         email,
@@ -93,12 +122,11 @@ export const createOrder = async (req, res) => {
           order_id: order._id,
           gross_amount: amount,
         },
-        item_details: cart.products.map((item) => ({
-          id: item.product._id,
-          name: item.product.name,
-          price: item.product.price,
-          quantity: item.quantity,
-        })),
+        expiry: {
+          unit: "minutes",
+          duration: 1,
+        },
+        item_details: orderItems,
         customer_details: {
           email,
           phone: noHp,
@@ -116,9 +144,9 @@ export const createOrder = async (req, res) => {
     const response = await fetch(url, options)
     const dataMidtrans = await response.json()
 
-    order.save()
+    await order.save({ session })
     cart.products = []
-    await cart.save()
+    await cart.save({ session })
 
     const io = getSocket()
     io.emit("stats", {
@@ -149,6 +177,9 @@ export const createOrder = async (req, res) => {
       },
     })
 
+    await session.commitTransaction()
+    session.endSession()
+
     return res.status(201).json({
       message: "Pesanan berhasil dibuat!",
       data: {
@@ -156,6 +187,7 @@ export const createOrder = async (req, res) => {
       },
     })
   } catch (error) {
+    await session.abortTransaction()
     if (error instanceof z.ZodError) {
       const errors = error.flatten().fieldErrors
       return res
@@ -165,7 +197,9 @@ export const createOrder = async (req, res) => {
     console.log("Error in createOrder function", new Date(), error)
     return res
       .status(500)
-      .json({ message: "Internal Server Error", errors: [] })
+      .json({ message: "Internal Server Error", errors: {} })
+  } finally {
+    session.endSession()
   }
 }
 
@@ -222,7 +256,10 @@ export const getOrders = async (req, res) => {
 
 export const callBackPayment = async (req, res) => {
   const data = req.body
+  const session = await mongoose.startSession()
   try {
+    session.startTransaction()
+
     let apiClient = new midtransClient.Snap({
       isProduction: false,
       serverKey: process.env.SERVER_KEY,
@@ -230,6 +267,7 @@ export const callBackPayment = async (req, res) => {
     })
 
     const response = await apiClient.transaction.notification(data)
+    console.log(response)
     const orderId = response.order_id
     const transactionStatus = response.transaction_status
     const fraudStatus = response.fraud_status
@@ -242,11 +280,13 @@ export const callBackPayment = async (req, res) => {
       .update(orderId + statusCode + grossAmount + process.env.SERVER_KEY)
       .digest("hex")
     if (signatureKey !== generateSHA512Hash) {
+      await session.abortTransaction()
       return res.status(401).json({ message: "Invalid signature", errors: [] })
     }
 
     const order = await Order.findById(orderId).populate("user")
     if (!order) {
+      await session.abortTransaction()
       return res
         .status(404)
         .json({ message: "Pesanan tidak ditemukan", errors: [] })
@@ -255,16 +295,28 @@ export const callBackPayment = async (req, res) => {
     if (fraudStatus === "deny") {
       order.status = "cancelled"
     }
-    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+    if (["capture", "settlement"].includes(transactionStatus)) {
       order.status = "paid"
+      const products = order.orderItems
+      for (const product of products) {
+        await Product.findByIdAndUpdate(product.id, {
+          $inc: {
+            stock: -product.quantity,
+            lockedStock: -product.quantity,
+          },
+        })
+      }
     }
-    if (
-      transactionStatus === "cancel" ||
-      transactionStatus === "expire" ||
-      transactionStatus === "deny" ||
-      transactionStatus === "failure"
-    ) {
+    if (["cancel", "expire", "deny", "failure"].includes(transactionStatus)) {
       order.status = "failed"
+      const products = order.orderItems
+      for (const product of products) {
+        await Product.findByIdAndUpdate(product.id, {
+          $inc: {
+            lockedStock: -product.quantity,
+          },
+        })
+      }
     }
 
     await order.save()
@@ -276,8 +328,8 @@ export const callBackPayment = async (req, res) => {
       metadata: order,
     })
 
+    const io = getSocket()
     if (order.status === "paid") {
-      const io = getSocket()
       io.emit("stats", {
         message: `Order ${order._id} has paid`,
         data: {
@@ -307,12 +359,63 @@ export const callBackPayment = async (req, res) => {
       },
     })
 
+    await session.commitTransaction()
+
     return res.status(200).json({ message: "Success", data: {} })
   } catch (error) {
+    await session.abortTransaction()
     console.log("Error in callBackPayment function", new Date(), error)
     return res
       .status(500)
       .json({ message: "Internal Server Error", errors: [] })
+  } finally {
+    session.endSession()
+  }
+}
+
+export const checkExpiredOrders = async (req, res) => {
+  const session = await mongoose.startSession()
+  try {
+    session.startTransaction()
+    const now = new Date()
+    const orders = await Order.find({
+      status: "pending",
+      expiredAt: { $lt: now },
+    })
+    for (const order of orders) {
+      const response = await fetch(
+        `https://api.sandbox.midtrans.com/v2/${order._id}/status`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: `Basic ${process.env.AUTH_STRING}`,
+          },
+        }
+      )
+      const data = await response.json()
+      if (
+        data.transaction_status === "expire" ||
+        data.status_message === "Transaction doesn't exist."
+      ) {
+        order.status = "failed"
+        await order.save()
+        const products = order.orderItems
+        for (const product of products) {
+          await Product.findByIdAndUpdate(product.id, {
+            $inc: {
+              lockedStock: -product.quantity,
+            },
+          })
+        }
+      }
+    }
+    await session.commitTransaction()
+    session.endSession()
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    console.log("Error in checkExpiredOrders function", new Date(), error)
   }
 }
 

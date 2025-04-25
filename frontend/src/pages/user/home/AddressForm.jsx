@@ -38,6 +38,10 @@ export default function AddressForm() {
   const [desaList, setDesaList] = useState([])
   const [dusunList, setDusunList] = useState([])
 
+  const [isLoadingKecamatan, setIsLoadingKecamatan] = useState(false)
+  const [isLoadingDesa, setIsLoadingDesa] = useState(false)
+  const [isLoadingDusun, setIsLoadingDusun] = useState(false)
+
   const onSubmit = (data) => {
     dispatch(createOrder(data))
       .unwrap()
@@ -49,8 +53,12 @@ export default function AddressForm() {
   }
 
   useEffect(() => {
+    setIsLoadingKecamatan(true)
+    setIsLoadingDesa(true)
+    setIsLoadingDusun(true)
     axiosInstance.get("/address/kecamatan").then((res) => {
       setKecamatanList(res.data.data)
+      setIsLoadingKecamatan(false)
     })
   }, [])
 
@@ -63,6 +71,7 @@ export default function AddressForm() {
           resetField("desa")
           resetField("dusun")
           setDusunList([])
+          setIsLoadingDesa(false)
         })
     }
   }, [kecamatan, resetField])
@@ -74,6 +83,7 @@ export default function AddressForm() {
         .then((res) => {
           setDusunList(res.data.data.dusunList)
           resetField("dusun")
+          setIsLoadingDusun(false)
         })
     }
   }, [desa, kecamatan, resetField])
@@ -142,12 +152,23 @@ export default function AddressForm() {
 
       {/* Kecamatan */}
       <div>
-        <label className="block mb-1">Kecamatan</label>
+        <label className="flex items-center gap-2 mb-1">
+          Kecamatan{" "}
+          {isLoadingKecamatan && (
+            <div className="">
+              <div className="w-4 h-4 border-2 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </label>
         <Controller
           name="kecamatan"
           control={control}
           render={({ field }) => (
-            <select {...field} className="border rounded px-3 py-2 w-full">
+            <select
+              disabled={isLoadingKecamatan}
+              {...field}
+              className="border rounded px-3 py-2 w-full"
+            >
               <option value="">Pilih Kecamatan</option>
               {kecamatanList.map((kec) => (
                 <option key={kec} value={kec}>
@@ -164,12 +185,23 @@ export default function AddressForm() {
 
       {/* Desa */}
       <div>
-        <label className="block mb-1">Desa</label>
+        <label className="mb-1 flex items-center gap-2">
+          Desa{" "}
+          {isLoadingDesa && (
+            <div className="">
+              <div className="w-4 h-4 border-2 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </label>
         <Controller
           name="desa"
           control={control}
           render={({ field }) => (
-            <select {...field} className="border rounded px-3 py-2 w-full">
+            <select
+              disabled={isLoadingDesa}
+              {...field}
+              className="border rounded px-3 py-2 w-full"
+            >
               <option value="">Pilih Desa</option>
               {desaList.map((des) => (
                 <option key={des} value={des}>
@@ -186,12 +218,23 @@ export default function AddressForm() {
 
       {/* Dusun */}
       <div>
-        <label className="block mb-1">Dusun</label>
+        <label className="flex items-center gap-2 mb-1">
+          Dusun{" "}
+          {isLoadingDusun && (
+            <div className="">
+              <div className="w-4 h-4 border-2 border-lime-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </label>
         <Controller
           name="dusun"
           control={control}
           render={({ field }) => (
-            <select {...field} className="border rounded px-3 py-2 w-full">
+            <select
+              disabled={isLoadingDusun}
+              {...field}
+              className="border rounded px-3 py-2 w-full"
+            >
               <option value="">Pilih Dusun</option>
               {dusunList.map((dus) => (
                 <option key={dus} value={dus}>

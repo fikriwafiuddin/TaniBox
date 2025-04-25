@@ -15,7 +15,7 @@ import { logout } from "../../../store/thunk/authThunk"
 import { getCart } from "../../../store/thunk/cartThunk"
 
 function Home() {
-  const { user } = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.auth)
   const [showCart, setShowCart] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const dispatch = useDispatch()

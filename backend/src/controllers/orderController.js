@@ -124,7 +124,7 @@ export const createOrder = async (req, res) => {
         },
         expiry: {
           unit: "minutes",
-          duration: 1,
+          duration: 10,
         },
         item_details: orderItems,
         customer_details: {

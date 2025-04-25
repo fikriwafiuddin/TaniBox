@@ -100,6 +100,16 @@ const orderSlice = createSlice({
         state.isLoadingSendOrder = false
         state.msgSuccess = action.payload.message
         state.selectedOrder = null
+        if (state.filterStatus === "all") {
+          const findIndex = state.orders.findIndex(
+            (order) => order._id === action.payload.data.order._id
+          )
+          state.orders[findIndex] = action.payload.data.order
+        } else {
+          state.orders = state.orders.filter(
+            (order) => order._id !== action.payload.data.order._id
+          )
+        }
       })
       .addCase(sendOrder.rejected, (state, action) => {
         state.isLoadingSendOrder = false
@@ -113,6 +123,16 @@ const orderSlice = createSlice({
         state.isLoadingRejectOrder = false
         state.msgSuccess = action.payload.message
         state.selectedOrder = null
+        if (state.filterStatus === "all") {
+          const findIndex = state.orders.findIndex(
+            (order) => order._id === action.payload.data.order._id
+          )
+          state.orders[findIndex] = action.payload.data.order
+        } else {
+          state.orders = state.orders.filter(
+            (order) => order._id !== action.payload.data.order._id
+          )
+        }
       })
       .addCase(rejectOrder.rejected, (state, action) => {
         state.isLoadingRejectOrder = false
@@ -126,6 +146,16 @@ const orderSlice = createSlice({
         state.isLoadingDeliveredOrder = false
         state.selectedOrder = null
         state.msgSuccess = action.payload.message
+        if (state.filterStatus === "all") {
+          const findIndex = state.orders.findIndex(
+            (order) => order._id === action.payload.data.order._id
+          )
+          state.orders[findIndex] = action.payload.data.order
+        } else {
+          state.orders = state.orders.filter(
+            (order) => order._id !== action.payload.data.order._id
+          )
+        }
       })
       .addCase(deliveredOrder.rejected, (state, action) => {
         state.isLoadingDeliveredOrder = false
@@ -139,6 +169,16 @@ const orderSlice = createSlice({
         state.isLoadingUndeliveredOrder = false
         state.selectedOrder = null
         state.msgSuccess = action.payload.message
+        if (state.filterStatus === "all") {
+          const findIndex = state.orders.findIndex(
+            (order) => order._id === action.payload.data.order._id
+          )
+          state.orders[findIndex] = action.payload.data.order
+        } else {
+          state.orders = state.orders.filter(
+            (order) => order._id !== action.payload.data.order._id
+          )
+        }
       })
       .addCase(undeliveredOrder.rejected, (state, action) => {
         state.isLoadingUndeliveredOrder = false
@@ -151,6 +191,16 @@ const orderSlice = createSlice({
       .addCase(deleteOrder.fulfilled, (state, action) => {
         state.isLoadingDeleteOrder = false
         state.msgSuccess = action.payload.message
+        if (state.filterStatus === "all") {
+          const findIndex = state.orders.findIndex(
+            (order) => order._id === action.payload.data.order._id
+          )
+          state.orders[findIndex] = action.payload.data.order
+        } else {
+          state.orders = state.orders.filter(
+            (order) => order._id !== action.payload.data.order._id
+          )
+        }
       })
       .addCase(deleteOrder.rejected, (state, action) => {
         state.isLoadingDeleteOrder = false

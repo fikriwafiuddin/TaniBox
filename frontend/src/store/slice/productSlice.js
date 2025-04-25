@@ -73,7 +73,6 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.isLoadingCreateProduct = false
-        state.products.push(action.payload.data.product)
         state.msgSuccess = action.payload.message
       })
       .addCase(createProduct.rejected, (state, action) => {
@@ -86,10 +85,6 @@ const productSlice = createSlice({
       })
       .addCase(editProduct.fulfilled, (state, action) => {
         state.isLoadingEditProduct = false
-        const index = state.products.findIndex(
-          (product) => product._id === action.payload.data.product._id
-        )
-        state.products[index] = action.payload.data.product
         state.msgSuccess = action.payload.message
       })
       .addCase(editProduct.rejected, (state, action) => {
@@ -102,9 +97,6 @@ const productSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.isLoadingDeleteProduct = false
-        state.products = state.products.filter(
-          (product) => product._id !== action.payload.data.product._id
-        )
         state.msgSuccess = action.payload.message
       })
       .addCase(deleteProduct.rejected, (state, action) => {
